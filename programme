@@ -1,0 +1,94 @@
+import numpy as np
+import soundfile as sf
+import librosa
+import plotly.graph_objects as go
+from scipy.signal import stft, istft
+import tkinter as tk
+
+def build_spectr(audio_path):    # Строим спектр введенного звука
+    y,sr = librosa.load(audio_path, sr=None)  # sr=None — оставить исходную частоту
+    t = np.linspace(0, len(y)/sr, len(y), endpoint=False)
+
+    f1, t0, Zxx = stft(y, fs=sr, nperseg=2048, noverlap=1024, window='hann')
+    t0 = list(t0)
+    t1=list(t0)
+    Sxx_log = 20 * np.log10(np.abs(Zxx) + 1e-10)
+    f_log = f1
+    maxf=[]
+    for i in range(len(t0)):
+        m=max(Sxx_log.T[i])
+        fi=f_log[list(Sxx_log.T[i]).index(m)]
+        if m>-60 and fi>20 and fi<20000:
+            maxf.append(fi)
+        else:
+            t1.remove(t0[i])
+
+    fig = go.Figure(data=go.Heatmap(
+        z=Sxx_log,
+        x=t0,
+        y=f_log,
+        colorscale='Jet',
+        colorbar=dict(title='dB'),
+        zmin = np.percentile(Sxx_log, 10),   # 10-й процентиль
+        zmax = np.percentile(Sxx_log, 100)  # 100-й процентиль
+        #hovertemplate='t=%{x:.3f}s<br>f=%{y:.1f}Hz<br>Amplitude=%{z:.1f}dB<extra></extra>'
+    ))
+
+    fig.update_layout(
+        title=dict(text='Спектрограмма (лог-шкала по частоте)', x=0.5),
+        xaxis=dict(title='t, s'),
+        yaxis=dict(
+            title='Частота, Гц',
+            type='log'
+        )
+    )
+    fig.show(renderer="browser")
+
+    fig1 = go.Figure()
+    fig1.add_trace(go.Scatter(x=t1, y=maxf, mode="lines+markers"))
+
+    fig1.update_layout(
+        yaxis=dict(type="log"),    # логарифмическая шкала по Y
+        width = 900,
+        height = 600
+    )
+    fig1.show(renderer="browser")
+
+# Как звучит чёрточка :)
+def chert(audio_path):
+    sr = 48000
+    nperseg, noverlap = 2048, 1024
+
+    # частоты и времена
+    f = np.linspace(0, sr/2, nperseg//2+1)
+    n_frames = 101 # длина массива времён
+    t_frames = np.arange(n_frames) * (nperseg - noverlap) / sr
+
+    # массивы
+    Sxx = np.zeros((len(f), n_frames))
+    phase = np.zeros_like(Sxx)
+
+    # выбираем частоту (строго бин сетки!)
+    bin_idx = 30
+    print("Частота:", f[bin_idx])
+
+    # амплитуда
+    Sxx[bin_idx, :] = 0.5
+    # фаза: синус
+    phase[bin_idx, :] = 2*np.pi*f[bin_idx]*t_frames - np.pi/2
+
+    # собираем спектр
+    Zxx = Sxx * np.exp(1j*phase)
+
+    # обратное преобразование с прямоугольным окном
+    t, y = istft(Zxx, fs=sr, nperseg=nperseg, noverlap=noverlap,
+                window='boxcar', input_onesided=True)
+    
+    sf.write(audio_path, y, sr)
+    print("Создан тестовый файл:", audio_path)
+
+#Аналогичным образом прописываем для каждой буквы ))))))))
+
+audio_path = input('Enter the audiofile path: ')
+build_spectr(audio_path)
+chert(audio_path)
