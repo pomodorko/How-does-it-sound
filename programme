@@ -31,7 +31,6 @@ def build_spectr(audio_path):    # Строим спектр введенног�
         colorbar=dict(title='dB'),
         zmin = np.percentile(Sxx_log, 10),   # 10-й процентиль
         zmax = np.percentile(Sxx_log, 100)  # 100-й процентиль
-        #hovertemplate='t=%{x:.3f}s<br>f=%{y:.1f}Hz<br>Amplitude=%{z:.1f}dB<extra></extra>'
     ))
 
     fig.update_layout(
@@ -59,28 +58,23 @@ def chert(audio_path):
     sr = 48000
     nperseg, noverlap = 2048, 1024
 
-    # частоты и времена
     f = np.linspace(0, sr/2, nperseg//2+1)
     n_frames = 101 # длина массива времён
     t_frames = np.arange(n_frames) * (nperseg - noverlap) / sr
 
-    # массивы
     Sxx = np.zeros((len(f), n_frames))
     phase = np.zeros_like(Sxx)
 
-    # выбираем частоту (строго бин сетки!)
+    # выбираем частоту
     bin_idx = 30
     print("Частота:", f[bin_idx])
 
-    # амплитуда
     Sxx[bin_idx, :] = 0.5
-    # фаза: синус
     phase[bin_idx, :] = 2*np.pi*f[bin_idx]*t_frames - np.pi/2
 
     # собираем спектр
     Zxx = Sxx * np.exp(1j*phase)
 
-    # обратное преобразование с прямоугольным окном
     t, y = istft(Zxx, fs=sr, nperseg=nperseg, noverlap=noverlap,
                 window='boxcar', input_onesided=True)
     
