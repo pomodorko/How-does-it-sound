@@ -1,10 +1,10 @@
+# -*- coding: utf-8 -*-
 import tkinter as tk
 import os
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
 import pygame
 import numpy as np
 import soundfile as sf
-import librosa
 from scipy.signal import stft, istft
 import tkinter as tk
 import random
