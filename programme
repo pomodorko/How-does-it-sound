@@ -12,9 +12,6 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 
 def build_spectr(t0, f1, Sxx_log, tk_frame):    # Строим спектр введенного звука
-    '''t0 = list(t0)
-    Sxx_log = 20 * np.log10(np.abs(Zxx) + 1e-10)'''
-
     # 1. СОЗДАЕМ ГРАФИК MATPLOTLIB
     fig, ax = plt.subplots(figsize=(8, 5))
     
@@ -51,7 +48,7 @@ def a(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, pha
 
     zxx = sxx * np.exp(1j*phase)
     t, y = istft(zxx, fs=sr, nperseg=nperseg, noverlap=noverlap,
-                window='boxcar', input_onesided=True)
+                window='hann', input_onesided=True)
     sf.write(audio_a, y, sr)
     return sxx
 
@@ -61,14 +58,13 @@ def b(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, pha
     for i in range(ymin, ymax + 1):
         for j in range(xmin, xmax):
             y, x = (i - ymin) / h, (j - xmin) / w
-            # Левая верт, три горизонт, правая верт (две части)
-            if (x < TH) or (abs(y) < TH) or (abs(y - 0.5) < TH) or (abs(y - 1) < TH) or (x > 1-TH):
+            if (x < TH) or (y < TH) or (abs(y - 0.5) < TH) or (1 - y < TH) or (x > 1-TH):
                 sxx[i][j] = 0.5
             phase[i][j] = 2*np.pi*f[i]*t_frames[j] - np.pi/2
 
     zxx = sxx * np.exp(1j*phase)
     t, y = istft(zxx, fs=sr, nperseg=nperseg, noverlap=noverlap,
-                window='boxcar', input_onesided=True)
+                window='hann', input_onesided=True)
     sf.write(audio_b, y, sr)
     return sxx
 
@@ -78,7 +74,7 @@ def c(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, pha
     for i in range(ymin, ymax + 1):
         for j in range(xmin, xmax):
             y, x = (i - ymin) / h, (j - xmin) / w
-            if (x < 10*TH):
+            if (x < TH) or y < TH or y > 1 - TH:
                 sxx[i][j] = 0.5
             phase[i][j] = 2*np.pi*f[i]*t_frames[j] - np.pi/2
 
@@ -94,17 +90,13 @@ def d(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, pha
     for i in range(ymin, ymax + 1):
         for j in range(xmin, xmax):
             y, x = (i - ymin) / h, (j - xmin) / w
-            # Левая верт, верх, низ, правая верт (скругление упрощено до блока)
-            if (x < TH) or \
-               (abs(y - 0) < TH and x < 1-TH) or \
-               (abs(y - 1) < TH and x < 1-TH) or \
-               (x > 1-TH and TH < y < 1-TH):
+            if (x < TH) or (y < TH and x < 1 - TH) or (1 - y < TH and x < 1-TH) or (x > 1-TH and TH < y < 1-TH):
                 sxx[i][j] = 0.5
             phase[i][j] = 2*np.pi*f[i]*t_frames[j] - np.pi/2
 
     zxx = sxx * np.exp(1j*phase)
     t, y = istft(zxx, fs=sr, nperseg=nperseg, noverlap=noverlap,
-                window='boxcar', input_onesided=True)
+                window='hann', input_onesided=True)
     sf.write(audio_d, y, sr)
     return sxx
 
@@ -114,14 +106,13 @@ def e(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, pha
     for i in range(ymin, ymax + 1):
         for j in range(xmin, xmax):
             y, x = (i - ymin) / h, (j - xmin) / w
-            # Левая верт и три горизонтальные
-            if (x < TH) or (abs(y - 0) < TH) or (abs(y - 0.5) < TH) or (abs(y - 1) < TH):
+            if (x < TH) or (y < TH) or (abs(y - 0.5) < TH) or (1 - y < TH):
                 sxx[i][j] = 0.5
             phase[i][j] = 2*np.pi*f[i]*t_frames[j] - np.pi/2
 
     zxx = sxx * np.exp(1j*phase)
     t, y = istft(zxx, fs=sr, nperseg=nperseg, noverlap=noverlap,
-                window='boxcar', input_onesided=True)
+                window='hann', input_onesided=True)
     sf.write(audio_e, y, sr)
     return sxx
 
@@ -131,14 +122,13 @@ def f(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, pha
     for i in range(ymin, ymax + 1):
         for j in range(xmin, xmax):
             y, x = (i - ymin) / h, (j - xmin) / w
-            # Левая верт, верхняя и средняя горизонт
-            if (x < TH) or (abs(y - 1) < TH) or (abs(y - 0.5) < TH):
+            if (x < TH) or (1-y < TH) or (abs(y - 0.5) < TH):
                 sxx[i][j] = 0.5
             phase[i][j] = 2*np.pi*f[i]*t_frames[j] - np.pi/2
 
     zxx = sxx * np.exp(1j*phase)
     t, y = istft(zxx, fs=sr, nperseg=nperseg, noverlap=noverlap,
-                window='boxcar', input_onesided=True)
+                window='hann', input_onesided=True)
     sf.write(audio_f, y, sr)
     return sxx
 
@@ -148,15 +138,13 @@ def g(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, pha
     for i in range(ymin, ymax + 1):
         for j in range(xmin, xmax):
             y, x = (i - ymin) / h, (j - xmin) / w
-            # С-образная часть + внутренняя перекладина и ножка
-            if (x < TH) or (abs(y - 0) < TH) or (abs(y - 1) < TH) or \
-               (x > 1-TH and y < 0.5) or (abs(y - 0.5) < TH and x > 0.5):
+            if (x < TH) or (y < TH) or (1-y < TH) or (x > 1-TH and y < 0.5) or (abs(y - 0.5) < TH and x > 0.5):
                 sxx[i][j] = 0.5
             phase[i][j] = 2*np.pi*f[i]*t_frames[j] - np.pi/2
 
     zxx = sxx * np.exp(1j*phase)
     t, y = istft(zxx, fs=sr, nperseg=nperseg, noverlap=noverlap,
-                window='boxcar', input_onesided=True)
+                window='hann', input_onesided=True)
     sf.write(audio_g, y, sr)
     return sxx
 
@@ -166,14 +154,13 @@ def h(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, pha
     for i in range(ymin, ymax + 1):
         for j in range(xmin, xmax):
             y, x = (i - ymin) / h, (j - xmin) / w
-            # Две вертикали и середина
             if (x < TH) or (x > 1-TH) or (abs(y - 0.5) < TH):
                 sxx[i][j] = 0.5
             phase[i][j] = 2*np.pi*f[i]*t_frames[j] - np.pi/2
 
     zxx = sxx * np.exp(1j*phase)
     t, y = istft(zxx, fs=sr, nperseg=nperseg, noverlap=noverlap,
-                window='boxcar', input_onesided=True)
+                window='hann', input_onesided=True)
     sf.write(audio_h, y, sr)
     return sxx
 
@@ -183,14 +170,13 @@ def i_let(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx,
     for i in range(ymin, ymax + 1):
         for j in range(xmin, xmax):
             y, x = (i - ymin) / h, (j - xmin) / w
-            # Центральная верт, верх и низ (засечки)
-            if (abs(x - 0.5) < TH) or (abs(y - 0) < TH) or (abs(y - 1) < TH):
+            if (abs(x - 0.5) < TH) or (((y < TH) or (1-y < TH)) and 0.25 < x < 0.75):
                 sxx[i][j] = 0.5
             phase[i][j] = 2*np.pi*f[i]*t_frames[j] - np.pi/2
 
     zxx = sxx * np.exp(1j*phase)
     t, y = istft(zxx, fs=sr, nperseg=nperseg, noverlap=noverlap,
-                window='boxcar', input_onesided=True)
+                window='hann', input_onesided=True)
     sf.write(audio_i, y, sr)
     return sxx
 
@@ -200,14 +186,13 @@ def j(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, pha
     for i in range(ymin, ymax + 1):
         for j in range(xmin, xmax):
             y, x = (i - ymin) / h, (j - xmin) / w
-            # Правая верт, низ, загиб
-            if (x > 1-TH and y > 0) or (abs(y - 0) < TH and x > 0) or (x < TH and y < 0.3):
+            if (x > 1-TH) or (y < TH) or (x < TH and y < 0.3):
                 sxx[i][j] = 0.5
             phase[i][j] = 2*np.pi*f[i]*t_frames[j] - np.pi/2
 
     zxx = sxx * np.exp(1j*phase)
     t, y = istft(zxx, fs=sr, nperseg=nperseg, noverlap=noverlap,
-                window='boxcar', input_onesided=True)
+                window='hann', input_onesided=True)
     sf.write(audio_j, y, sr)
     return sxx
 
@@ -217,14 +202,13 @@ def k(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, pha
     for i in range(ymin, ymax + 1):
         for j in range(xmin, xmax):
             y, x = (i - ymin) / h, (j - xmin) / w
-            # Левая верт + галочка
             if (x < TH) or (abs(y - (0.5 + x/2)) < TH) or (abs(y - (0.5 - x/2)) < TH):
                 sxx[i][j] = 0.5
             phase[i][j] = 2*np.pi*f[i]*t_frames[j] - np.pi/2
 
     zxx = sxx * np.exp(1j*phase)
     t, y = istft(zxx, fs=sr, nperseg=nperseg, noverlap=noverlap,
-                window='boxcar', input_onesided=True)
+                window='hann', input_onesided=True)
     sf.write(audio_k, y, sr)
     return sxx
 
@@ -234,14 +218,13 @@ def l(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, pha
     for i in range(ymin, ymax + 1):
         for j in range(xmin, xmax):
             y, x = (i - ymin) / h, (j - xmin) / w
-            # Левая верт и низ
-            if (x < TH) or (abs(y - 0) < TH):
+            if (x < TH) or (y < TH):
                 sxx[i][j] = 0.5
             phase[i][j] = 2*np.pi*f[i]*t_frames[j] - np.pi/2
 
     zxx = sxx * np.exp(1j*phase)
     t, y = istft(zxx, fs=sr, nperseg=nperseg, noverlap=noverlap,
-                window='boxcar', input_onesided=True)
+                window='hann', input_onesided=True)
     sf.write(audio_l, y, sr)
     return sxx
 
@@ -251,15 +234,13 @@ def m(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, pha
     for i in range(ymin, ymax + 1):
         for j in range(xmin, xmax):
             y, x = (i - ymin) / h, (j - xmin) / w
-            # Две верт и галочка вниз
-            if (x < TH) or (x > 1-TH) or \
-               (abs(y - (1-x)) < TH and x <= 0.5) or (abs(y - x) < TH and x >= 0.5):
+            if (x < TH) or (x > 1-TH) or (abs(y - (1-x)) < TH and x <= 0.5) or (abs(y - x) < TH and x >= 0.5):
                 sxx[i][j] = 0.5
             phase[i][j] = 2*np.pi*f[i]*t_frames[j] - np.pi/2
 
     zxx = sxx * np.exp(1j*phase)
     t, y = istft(zxx, fs=sr, nperseg=nperseg, noverlap=noverlap,
-                window='boxcar', input_onesided=True)
+                window='hann', input_onesided=True)
     sf.write(audio_m, y, sr)
     return sxx
 
@@ -269,14 +250,13 @@ def n(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, pha
     for i in range(ymin, ymax + 1):
         for j in range(xmin, xmax):
             y, x = (i - ymin) / h, (j - xmin) / w
-            # Две верт и диагональ (верх-лево -> низ-право)
             if (x < TH) or (x > 1-TH) or (abs(y - (1-x)) < TH):
                 sxx[i][j] = 0.5
             phase[i][j] = 2*np.pi*f[i]*t_frames[j] - np.pi/2
 
     zxx = sxx * np.exp(1j*phase)
     t, y = istft(zxx, fs=sr, nperseg=nperseg, noverlap=noverlap,
-                window='boxcar', input_onesided=True)
+                window='hann', input_onesided=True)
     sf.write(audio_n, y, sr)
     return sxx
 
@@ -286,14 +266,13 @@ def o(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, pha
     for i in range(ymin, ymax + 1):
         for j in range(xmin, xmax):
             y, x = (i - ymin) / h, (j - xmin) / w
-            # Коробка
-            if (x < TH) or (x > 1-TH) or (abs(y - 0) < TH) or (abs(y - 1) < TH):
+            if (x < TH) or (x > 1-TH) or (y < TH) or (1-y < TH):
                 sxx[i][j] = 0.5
             phase[i][j] = 2*np.pi*f[i]*t_frames[j] - np.pi/2
 
     zxx = sxx * np.exp(1j*phase)
     t, y = istft(zxx, fs=sr, nperseg=nperseg, noverlap=noverlap,
-                window='boxcar', input_onesided=True)
+                window='hann', input_onesided=True)
     sf.write(audio_o, y, sr)
     return sxx
 
@@ -303,14 +282,12 @@ def p(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, pha
     for i in range(ymin, ymax + 1):
         for j in range(xmin, xmax):
             y, x = (i - ymin) / h, (j - xmin) / w
-            # Левая верт, верхняя петля
-            if (x < TH) or (abs(y - 1) < TH) or (abs(y - 0.5) < TH) or \
-               (x > 1-TH and y > 0.5):
+            if (x < TH) or (1-y < TH) or (abs(y - 0.5) < TH) or (x > 1-TH and y > 0.5):
                 sxx[i][j] = 0.5
             phase[i][j] = 2*np.pi*f[i]*t_frames[j] - np.pi/2
 
     zxx = sxx * np.exp(1j*phase)
-    t, y = istft(zxx, fs=sr, nperseg=nperseg, noverlap=noverlap, window='boxcar', input_onesided=True)
+    t, y = istft(zxx, fs=sr, nperseg=nperseg, noverlap=noverlap, window='hann', input_onesided=True)
     sf.write(audio_p, y, sr)
     return sxx
 
@@ -320,14 +297,12 @@ def q(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, pha
     for i in range(ymin, ymax + 1):
         for j in range(xmin, xmax):
             y, x = (i - ymin) / h, (j - xmin) / w
-            # Коробка + хвостик
-            if (x < TH) or (x > 1-TH) or (abs(y - 0) < TH) or (abs(y - 1) < TH) or \
-               (abs(y - (x - 0.5)) < TH and x > 0.5 and y < 0.5):
+            if (x < TH and y>0.2) or (abs(x-0.8) < TH and y>0.2) or (abs(y - 0.2) < TH and x<0.8) or (1-y < TH and x<0.8) or (abs(y - (-x + 1)) < TH and x > 0.5 and y < 0.5):
                 sxx[i][j] = 0.5
             phase[i][j] = 2*np.pi*f[i]*t_frames[j] - np.pi/2
 
     zxx = sxx * np.exp(1j*phase)
-    t, y = istft(zxx, fs=sr, nperseg=nperseg, noverlap=noverlap, window='boxcar', input_onesided=True)
+    t, y = istft(zxx, fs=sr, nperseg=nperseg, noverlap=noverlap, window='hann', input_onesided=True)
     sf.write(audio_q, y, sr)
     return sxx
 
@@ -337,15 +312,12 @@ def r(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, pha
     for i in range(ymin, ymax + 1):
         for j in range(xmin, xmax):
             y, x = (i - ymin) / h, (j - xmin) / w
-            # Как P + наклонная нога
-            if (x < TH) or (abs(y - 1) < TH) or (abs(y - 0.5) < TH) or \
-               (x > 1-TH and y > 0.5) or \
-               (abs(y - x) < TH and y < 0.5 and x > 0.2):
+            if (x < TH) or (1-y < TH) or (abs(y - 0.5) < TH) or (x > 1-TH and y > 0.5) or (abs(y - (0.5-x/2)) < TH and y < 0.5):
                 sxx[i][j] = 0.5
             phase[i][j] = 2*np.pi*f[i]*t_frames[j] - np.pi/2
 
     zxx = sxx * np.exp(1j*phase)
-    t, y = istft(zxx, fs=sr, nperseg=nperseg, noverlap=noverlap, window='boxcar', input_onesided=True)
+    t, y = istft(zxx, fs=sr, nperseg=nperseg, noverlap=noverlap, window='hann', input_onesided=True)
     sf.write(audio_r, y, sr)
     return sxx
 
@@ -355,14 +327,12 @@ def s(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, pha
     for i in range(ymin, ymax + 1):
         for j in range(xmin, xmax):
             y, x = (i - ymin) / h, (j - xmin) / w
-            # Змейка (верх, середина, низ, левый-верх, правый-низ)
-            if (abs(y - 1) < TH) or (abs(y - 0.5) < TH) or (abs(y - 0) < TH) or \
-               (x < TH and y > 0.5) or (x > 1-TH and y < 0.5):
+            if (1-y < TH) or (abs(y - 0.5) < TH) or (y < TH) or (x < TH and y > 0.5) or (x > 1-TH and y < 0.5):
                 sxx[i][j] = 0.5
             phase[i][j] = 2*np.pi*f[i]*t_frames[j] - np.pi/2
 
     zxx = sxx * np.exp(1j*phase)
-    t, y = istft(zxx, fs=sr, nperseg=nperseg, noverlap=noverlap, window='boxcar', input_onesided=True)
+    t, y = istft(zxx, fs=sr, nperseg=nperseg, noverlap=noverlap, window='hann', input_onesided=True)
     sf.write(audio_s, y, sr)
     return sxx
 
@@ -372,13 +342,12 @@ def t(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, pha
     for i in range(ymin, ymax + 1):
         for j in range(xmin, xmax):
             y, x = (i - ymin) / h, (j - xmin) / w
-            # Верх и центр
-            if (abs(y - 1) < TH) or (abs(x - 0.5) < TH):
+            if (1-y < TH) or (abs(x - 0.5) < TH):
                 sxx[i][j] = 0.5
             phase[i][j] = 2*np.pi*f[i]*t_frames[j] - np.pi/2
 
     zxx = sxx * np.exp(1j*phase)
-    t, y = istft(zxx, fs=sr, nperseg=nperseg, noverlap=noverlap, window='boxcar', input_onesided=True)
+    t, y = istft(zxx, fs=sr, nperseg=nperseg, noverlap=noverlap, window='hann', input_onesided=True)
     sf.write(audio_t, y, sr)
     return sxx
 
@@ -388,13 +357,12 @@ def u(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, pha
     for i in range(ymin, ymax + 1):
         for j in range(xmin, xmax):
             y, x = (i - ymin) / h, (j - xmin) / w
-            # Левая, правая, низ
-            if (x < TH) or (x > 1-TH) or (abs(y - 0) < TH):
+            if (x < TH) or (x > 1-TH) or (y < TH):
                 sxx[i][j] = 0.5
             phase[i][j] = 2*np.pi*f[i]*t_frames[j] - np.pi/2
 
     zxx = sxx * np.exp(1j*phase)
-    t, y = istft(zxx, fs=sr, nperseg=nperseg, noverlap=noverlap, window='boxcar', input_onesided=True)
+    t, y = istft(zxx, fs=sr, nperseg=nperseg, noverlap=noverlap, window='hann', input_onesided=True)
     sf.write(audio_u, y, sr)
     return sxx
 
@@ -404,14 +372,12 @@ def v(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, pha
     for i in range(ymin, ymax + 1):
         for j in range(xmin, xmax):
             y, x = (i - ymin) / h, (j - xmin) / w
-            # Галочка (0,1)->(0.5,0) и (0.5,0)->(1,1)
-            if (abs(y - (1 - 2*x)) < TH and x <= 0.5) or \
-               (abs(y - (2*x - 1)) < TH and x >= 0.5):
+            if (abs(y - (1 - 2*x)) < TH and x <= 0.5) or (abs(y - (2*x - 1)) < TH and x >= 0.5):
                 sxx[i][j] = 0.5
             phase[i][j] = 2*np.pi*f[i]*t_frames[j] - np.pi/2
 
     zxx = sxx * np.exp(1j*phase)
-    t, y = istft(zxx, fs=sr, nperseg=nperseg, noverlap=noverlap, window='boxcar', input_onesided=True)
+    t, y = istft(zxx, fs=sr, nperseg=nperseg, noverlap=noverlap, window='hann', input_onesided=True)
     sf.write(audio_a, y, sr)
     return sxx
 
@@ -421,14 +387,12 @@ def w(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, pha
     for i in range(ymin, ymax + 1):
         for j in range(xmin, xmax):
             y, x = (i - ymin) / h, (j - xmin) / w
-            # Левая, правая, галочка вверх посередине
-            if (x < TH) or (x > 1-TH) or \
-               (abs(y - x) < TH and x <= 0.5) or (abs(y - (1-x)) < TH and x >= 0.5):
+            if (x < TH) or (x > 1-TH) or (abs(y - x) < TH and x <= 0.5) or (abs(y - (1-x)) < TH and x >= 0.5):
                 sxx[i][j] = 0.5
             phase[i][j] = 2*np.pi*f[i]*t_frames[j] - np.pi/2
 
     zxx = sxx * np.exp(1j*phase)
-    t, y = istft(zxx, fs=sr, nperseg=nperseg, noverlap=noverlap, window='boxcar', input_onesided=True)
+    t, y = istft(zxx, fs=sr, nperseg=nperseg, noverlap=noverlap, window='hann', input_onesided=True)
     sf.write(audio_a, y, sr)
     return sxx
 
@@ -438,13 +402,12 @@ def x_let(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx,
     for i in range(ymin, ymax + 1):
         for j in range(xmin, xmax):
             y, x = (i - ymin) / h, (j - xmin) / w
-            # Крест
             if (abs(y - x) < TH) or (abs(y - (1 - x)) < TH):
                 sxx[i][j] = 0.5
             phase[i][j] = 2*np.pi*f[i]*t_frames[j] - np.pi/2
 
     zxx = sxx * np.exp(1j*phase)
-    t, y = istft(zxx, fs=sr, nperseg=nperseg, noverlap=noverlap, window='boxcar', input_onesided=True)
+    t, y = istft(zxx, fs=sr, nperseg=nperseg, noverlap=noverlap, window='hann', input_onesided=True)
     sf.write(audio_a, y, sr)
     return sxx
 
@@ -454,15 +417,12 @@ def y_let(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx,
     for i in range(ymin, ymax + 1):
         for j in range(xmin, xmax):
             y, x = (i - ymin) / h, (j - xmin) / w
-            # Воронка сверху, палка снизу
-            if (abs(x - 0.5) < TH and y < 0.5) or \
-               (abs(y - x) < TH and y >= 0.5) or \
-               (abs(y - (1-x)) < TH and y >= 0.5):
+            if (abs(x - 0.5) < TH and y < 0.5) or (abs(y - x) < TH and y >= 0.5) or (abs(y - (1-x)) < TH and y >= 0.5):
                 sxx[i][j] = 0.5
             phase[i][j] = 2*np.pi*f[i]*t_frames[j] - np.pi/2
 
     zxx = sxx * np.exp(1j*phase)
-    t, y = istft(zxx, fs=sr, nperseg=nperseg, noverlap=noverlap, window='boxcar', input_onesided=True)
+    t, y = istft(zxx, fs=sr, nperseg=nperseg, noverlap=noverlap, window='hann', input_onesided=True)
     sf.write(audio_a, y, sr)
     return sxx
 
@@ -472,17 +432,15 @@ def z(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, pha
     for i in range(ymin, ymax + 1):
         for j in range(xmin, xmax):
             y, x = (i - ymin) / h, (j - xmin) / w
-            # Верх, низ, диагональ (право-верх -> лево-низ)
-            if (abs(y - 0) < TH) or (abs(y - 1) < TH) or (abs(y - x) < TH):
+            if (y < TH) or (1-y < TH) or (abs(y - x) < TH):
                 sxx[i][j] = 0.5
             phase[i][j] = 2*np.pi*f[i]*t_frames[j] - np.pi/2
 
     zxx = sxx * np.exp(1j*phase)
-    t, y = istft(zxx, fs=sr, nperseg=nperseg, noverlap=noverlap, window='boxcar', input_onesided=True)
+    t, y = istft(zxx, fs=sr, nperseg=nperseg, noverlap=noverlap, window='hann', input_onesided=True)
     sf.write(audio_a, y, sr)
     return sxx
     
-
 sr0 = 48000
 nperseg0, noverlap0 = 2048, 1024
 fmin0 = 200
@@ -587,13 +545,11 @@ class GameApp(tk.Tk):
         bottom_buttons_frame.pack(side="bottom", pady=20)
 
         # Кнопка 1: Проверить ответ
-        btn_check = tk.Button(bottom_buttons_frame, text="Ответить", width=10, 
-                              command=self.check_answer)
+        btn_check = tk.Button(bottom_buttons_frame, text="Ответить", width=10, command=self.check_answer)
         btn_check.pack(side="left", padx=10)
 
         # Кнопка 2: Не знаю
-        btn_give_up = tk.Button(bottom_buttons_frame, text="Не знаю", width=10, 
-                                command=self.show_give_up_screen)
+        btn_give_up = tk.Button(bottom_buttons_frame, text="Не знаю", width=10, command=self.show_give_up_screen)
         btn_give_up.pack(side="left", padx=10)
 
     def check_answer(self):
@@ -646,7 +602,6 @@ class GameApp(tk.Tk):
 
         # Строим спектр
         build_spectr(t_frames0, f0, self.sxx, self.current_frame)
-
 
 #Запуск программы
 if __name__ == "__main__":
