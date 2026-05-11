@@ -1,6 +1,7 @@
 import tkinter as tk
-import pygame
 import os
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
+import pygame
 import numpy as np
 import soundfile as sf
 import librosa
@@ -21,7 +22,6 @@ def build_spectr(audio_path, tk_frame):    # Строим спектр введ�
     # 1. СОЗДАЕМ ГРАФИК MATPLOTLIB
     fig, ax = plt.subplots(figsize=(8, 5))
     
-    # pcolormesh - аналог Heatmap в Plotly
     vmin = np.percentile(Sxx_log, 10)
     vmax = np.percentile(Sxx_log, 100)
     mesh = ax.pcolormesh(t0, f1, Sxx_log, cmap='jet', vmin=vmin, vmax=vmax, shading='auto')
@@ -30,7 +30,7 @@ def build_spectr(audio_path, tk_frame):    # Строим спектр введ�
     ax.set_title('Спектрограмма')
     ax.set_ylabel('Частота, Гц')
     ax.set_xlabel('t, s')
-    ax.set_ylim([200, 900]) 
+    ax.set_ylim([100, 900]) 
     fig.colorbar(mesh, ax=ax, label='dB')
 
     canvas = FigureCanvasTkAgg(fig, master=tk_frame)
@@ -464,13 +464,13 @@ def z(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, pha
 sr0 = 48000
 nperseg0, noverlap0 = 2048, 1024
 fmin0 = 200
-fmax0 = 500
+fmax0 = 800
 f0 = np.linspace(0, sr0/2, nperseg0//2+1)
 a0 = 94 # длина массива времён
 t_frames0 = np.arange(a0) * (nperseg0 - noverlap0) / sr0
 b0=nperseg0//2+1
 gap0 = 9
-ymin0, ymax0 = int(fmin0/sr0*2*b0)+gap0, int(fmax0/sr0*2*b0)+gap0
+ymin0, ymax0 = int(fmin0/sr0*2*b0), int(fmax0/sr0*2*b0)
 xmin0, xmax0 = gap0, a0 - gap0
 h0, w0 = ymax0 - ymin0, xmax0 - xmin0
 sxx0 = np.zeros((b0, a0))
@@ -530,6 +530,8 @@ class GameApp(tk.Tk):
     #ЭКРАН 2: ОСНОВНАЯ ИГРА
     def show_game_screen(self):
         self.clear_screen()
+        sxx0.fill(0)
+        phase0.fill(0)
         random_action = audio_create()
         random_action(sr0, nperseg0, noverlap0, ymin0, ymax0, xmax0, xmin0, h0, w0, f0, t_frames0, sxx0, phase0, audio_a0)
         self.answer = func[random_action]
