@@ -11,13 +11,9 @@ import random
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 
-def build_spectr(audio_path, tk_frame):    # Строим спектр введенного звука
-    y,sr = librosa.load(audio_path, sr=None)  # sr=None — оставить исходную частоту
-    t = np.linspace(0, len(y)/sr, len(y), endpoint=False)
-
-    f1, t0, Zxx = stft(y, fs=sr, nperseg=2048, noverlap=1024, window='hann')
-    t0 = list(t0)
-    Sxx_log = 20 * np.log10(np.abs(Zxx) + 1e-10)
+def build_spectr(t0, f1, Sxx_log, tk_frame):    # Строим спектр введенного звука
+    '''t0 = list(t0)
+    Sxx_log = 20 * np.log10(np.abs(Zxx) + 1e-10)'''
 
     # 1. СОЗДАЕМ ГРАФИК MATPLOTLIB
     fig, ax = plt.subplots(figsize=(8, 5))
@@ -57,6 +53,7 @@ def a(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, pha
     t, y = istft(zxx, fs=sr, nperseg=nperseg, noverlap=noverlap,
                 window='boxcar', input_onesided=True)
     sf.write(audio_a, y, sr)
+    return sxx
 
 def b(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, phase, audio_b):
     if h <= 0 or w <= 0: return
@@ -65,7 +62,7 @@ def b(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, pha
         for j in range(xmin, xmax):
             y, x = (i - ymin) / h, (j - xmin) / w
             # Левая верт, три горизонт, правая верт (две части)
-            if (x < 3*TH) or (abs(y) < TH) or (abs(y - 0.5) < TH) or (abs(y - 1) < TH) or (x > 1-TH):
+            if (x < TH) or (abs(y) < TH) or (abs(y - 0.5) < TH) or (abs(y - 1) < TH) or (x > 1-TH):
                 sxx[i][j] = 0.5
             phase[i][j] = 2*np.pi*f[i]*t_frames[j] - np.pi/2
 
@@ -73,6 +70,7 @@ def b(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, pha
     t, y = istft(zxx, fs=sr, nperseg=nperseg, noverlap=noverlap,
                 window='boxcar', input_onesided=True)
     sf.write(audio_b, y, sr)
+    return sxx
 
 def c(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, phase, audio_c): 
     if h <= 0 or w <= 0: return
@@ -88,6 +86,7 @@ def c(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, pha
     t, y = istft(zxx, fs=sr, nperseg=nperseg, noverlap=noverlap,
                 window='hann', input_onesided=True)
     sf.write(audio_c, y, sr)
+    return sxx
 
 def d(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, phase, audio_d):
     if h <= 0 or w <= 0: return
@@ -107,6 +106,7 @@ def d(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, pha
     t, y = istft(zxx, fs=sr, nperseg=nperseg, noverlap=noverlap,
                 window='boxcar', input_onesided=True)
     sf.write(audio_d, y, sr)
+    return sxx
 
 def e(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, phase, audio_e):
     if h <= 0 or w <= 0: return
@@ -123,6 +123,7 @@ def e(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, pha
     t, y = istft(zxx, fs=sr, nperseg=nperseg, noverlap=noverlap,
                 window='boxcar', input_onesided=True)
     sf.write(audio_e, y, sr)
+    return sxx
 
 def f(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, phase, audio_f):
     if h <= 0 or w <= 0: return
@@ -139,6 +140,7 @@ def f(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, pha
     t, y = istft(zxx, fs=sr, nperseg=nperseg, noverlap=noverlap,
                 window='boxcar', input_onesided=True)
     sf.write(audio_f, y, sr)
+    return sxx
 
 def g(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, phase, audio_g):
     if h <= 0 or w <= 0: return
@@ -156,6 +158,7 @@ def g(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, pha
     t, y = istft(zxx, fs=sr, nperseg=nperseg, noverlap=noverlap,
                 window='boxcar', input_onesided=True)
     sf.write(audio_g, y, sr)
+    return sxx
 
 def h(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, phase, audio_h):
     if h <= 0 or w <= 0: return
@@ -172,6 +175,7 @@ def h(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, pha
     t, y = istft(zxx, fs=sr, nperseg=nperseg, noverlap=noverlap,
                 window='boxcar', input_onesided=True)
     sf.write(audio_h, y, sr)
+    return sxx
 
 def i_let(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, phase, audio_i):
     if h <= 0 or w <= 0: return
@@ -188,6 +192,7 @@ def i_let(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx,
     t, y = istft(zxx, fs=sr, nperseg=nperseg, noverlap=noverlap,
                 window='boxcar', input_onesided=True)
     sf.write(audio_i, y, sr)
+    return sxx
 
 def j(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, phase, audio_j):
     if h <= 0 or w <= 0: return
@@ -204,6 +209,7 @@ def j(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, pha
     t, y = istft(zxx, fs=sr, nperseg=nperseg, noverlap=noverlap,
                 window='boxcar', input_onesided=True)
     sf.write(audio_j, y, sr)
+    return sxx
 
 def k(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, phase, audio_k):
     if h <= 0 or w <= 0: return
@@ -220,6 +226,7 @@ def k(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, pha
     t, y = istft(zxx, fs=sr, nperseg=nperseg, noverlap=noverlap,
                 window='boxcar', input_onesided=True)
     sf.write(audio_k, y, sr)
+    return sxx
 
 def l(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, phase, audio_l):
     if h <= 0 or w <= 0: return
@@ -236,6 +243,7 @@ def l(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, pha
     t, y = istft(zxx, fs=sr, nperseg=nperseg, noverlap=noverlap,
                 window='boxcar', input_onesided=True)
     sf.write(audio_l, y, sr)
+    return sxx
 
 def m(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, phase, audio_m):
     if h <= 0 or w <= 0: return
@@ -253,6 +261,7 @@ def m(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, pha
     t, y = istft(zxx, fs=sr, nperseg=nperseg, noverlap=noverlap,
                 window='boxcar', input_onesided=True)
     sf.write(audio_m, y, sr)
+    return sxx
 
 def n(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, phase, audio_n):
     if h <= 0 or w <= 0: return
@@ -269,6 +278,7 @@ def n(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, pha
     t, y = istft(zxx, fs=sr, nperseg=nperseg, noverlap=noverlap,
                 window='boxcar', input_onesided=True)
     sf.write(audio_n, y, sr)
+    return sxx
 
 def o(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, phase, audio_o):
     if h <= 0 or w <= 0: return
@@ -285,6 +295,7 @@ def o(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, pha
     t, y = istft(zxx, fs=sr, nperseg=nperseg, noverlap=noverlap,
                 window='boxcar', input_onesided=True)
     sf.write(audio_o, y, sr)
+    return sxx
 
 def p(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, phase, audio_p):
     if h <= 0 or w <= 0: return
@@ -301,6 +312,7 @@ def p(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, pha
     zxx = sxx * np.exp(1j*phase)
     t, y = istft(zxx, fs=sr, nperseg=nperseg, noverlap=noverlap, window='boxcar', input_onesided=True)
     sf.write(audio_p, y, sr)
+    return sxx
 
 def q(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, phase, audio_q):
     if h <= 0 or w <= 0: return
@@ -317,6 +329,7 @@ def q(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, pha
     zxx = sxx * np.exp(1j*phase)
     t, y = istft(zxx, fs=sr, nperseg=nperseg, noverlap=noverlap, window='boxcar', input_onesided=True)
     sf.write(audio_q, y, sr)
+    return sxx
 
 def r(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, phase, audio_r):
     if h <= 0 or w <= 0: return
@@ -334,6 +347,7 @@ def r(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, pha
     zxx = sxx * np.exp(1j*phase)
     t, y = istft(zxx, fs=sr, nperseg=nperseg, noverlap=noverlap, window='boxcar', input_onesided=True)
     sf.write(audio_r, y, sr)
+    return sxx
 
 def s(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, phase, audio_s):
     if h <= 0 or w <= 0: return
@@ -350,6 +364,7 @@ def s(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, pha
     zxx = sxx * np.exp(1j*phase)
     t, y = istft(zxx, fs=sr, nperseg=nperseg, noverlap=noverlap, window='boxcar', input_onesided=True)
     sf.write(audio_s, y, sr)
+    return sxx
 
 def t(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, phase, audio_t):
     if h <= 0 or w <= 0: return
@@ -365,6 +380,7 @@ def t(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, pha
     zxx = sxx * np.exp(1j*phase)
     t, y = istft(zxx, fs=sr, nperseg=nperseg, noverlap=noverlap, window='boxcar', input_onesided=True)
     sf.write(audio_t, y, sr)
+    return sxx
 
 def u(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, phase, audio_u):
     if h <= 0 or w <= 0: return
@@ -380,6 +396,7 @@ def u(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, pha
     zxx = sxx * np.exp(1j*phase)
     t, y = istft(zxx, fs=sr, nperseg=nperseg, noverlap=noverlap, window='boxcar', input_onesided=True)
     sf.write(audio_u, y, sr)
+    return sxx
 
 def v(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, phase, audio_a):
     if h <= 0 or w <= 0: return
@@ -396,6 +413,7 @@ def v(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, pha
     zxx = sxx * np.exp(1j*phase)
     t, y = istft(zxx, fs=sr, nperseg=nperseg, noverlap=noverlap, window='boxcar', input_onesided=True)
     sf.write(audio_a, y, sr)
+    return sxx
 
 def w(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, phase, audio_a):
     if h <= 0 or w <= 0: return
@@ -412,6 +430,7 @@ def w(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, pha
     zxx = sxx * np.exp(1j*phase)
     t, y = istft(zxx, fs=sr, nperseg=nperseg, noverlap=noverlap, window='boxcar', input_onesided=True)
     sf.write(audio_a, y, sr)
+    return sxx
 
 def x_let(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, phase, audio_a):
     if h <= 0 or w <= 0: return
@@ -427,6 +446,7 @@ def x_let(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx,
     zxx = sxx * np.exp(1j*phase)
     t, y = istft(zxx, fs=sr, nperseg=nperseg, noverlap=noverlap, window='boxcar', input_onesided=True)
     sf.write(audio_a, y, sr)
+    return sxx
 
 def y_let(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, phase, audio_a):
     if h <= 0 or w <= 0: return
@@ -444,6 +464,7 @@ def y_let(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx,
     zxx = sxx * np.exp(1j*phase)
     t, y = istft(zxx, fs=sr, nperseg=nperseg, noverlap=noverlap, window='boxcar', input_onesided=True)
     sf.write(audio_a, y, sr)
+    return sxx
 
 def z(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, phase, audio_a):
     if h <= 0 or w <= 0: return
@@ -459,6 +480,7 @@ def z(sr, nperseg, noverlap, ymin, ymax, xmax, xmin, h, w, f, t_frames, sxx, pha
     zxx = sxx * np.exp(1j*phase)
     t, y = istft(zxx, fs=sr, nperseg=nperseg, noverlap=noverlap, window='boxcar', input_onesided=True)
     sf.write(audio_a, y, sr)
+    return sxx
     
 
 sr0 = 48000
@@ -533,7 +555,7 @@ class GameApp(tk.Tk):
         sxx0.fill(0)
         phase0.fill(0)
         random_action = audio_create()
-        random_action(sr0, nperseg0, noverlap0, ymin0, ymax0, xmax0, xmin0, h0, w0, f0, t_frames0, sxx0, phase0, audio_a0)
+        self.sxx = random_action(sr0, nperseg0, noverlap0, ymin0, ymax0, xmax0, xmin0, h0, w0, f0, t_frames0, sxx0, phase0, audio_a0)
         self.answer = func[random_action]
         self.current_frame = tk.Frame(self)
         self.current_frame.pack(expand=True, fill="both", padx=20, pady=20)
@@ -601,7 +623,7 @@ class GameApp(tk.Tk):
         tk.Button(bottom_frame, text="Сыграть еще раз", command=self.show_game_screen).pack(side="left", padx=10)
         tk.Button(bottom_frame, text="Завершить игру", command=self.destroy).pack(side="left", padx=10)
 
-        build_spectr(audio_a0, self.current_frame)
+        build_spectr(t_frames0, f0, self.sxx, self.current_frame)
 
     #ЭКРАН 4: ПОРАЖЕНИЕ ("НЕ ЗНАЮ")
     def show_give_up_screen(self):
@@ -623,7 +645,7 @@ class GameApp(tk.Tk):
         tk.Button(bottom_frame, text="Завершить игру", command=self.destroy).pack(side="left", padx=10)
 
         # Строим спектр
-        build_spectr(audio_a0, self.current_frame)
+        build_spectr(t_frames0, f0, self.sxx, self.current_frame)
 
 
 #Запуск программы
